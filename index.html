@@ -1,147 +1,643 @@
 <!DOCTYPE html>
+
 <html lang="id">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voucher Scanner Google Sheets</title>
+
+    <title>Voucher Validator Dashboard</title>
+
     <script src="https://unpkg.com/html5-qrcode"></script>
+
     <style>
-        body { font-family: sans-serif; background-color: #f3f4f6; display: flex; flex-direction: column; items-center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        .container { background-color: white; padding: 25px; rounded-radius: 16px; shadow-box: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; border-radius: 16px; }
-        h1 { font-size: 1.25rem; font-weight: bold; color: #1f2937; margin-top: 0; margin-bottom: 5px; }
-        p.subtitle { font-size: 0.875rem; color: #6b7280; margin-bottom: 20px; }
-        #reader { width: 100%; aspect-ratio: 1/1; background-color: black; border-radius: 8px; overflow: hidden; margin-bottom: 15px; border: 1px solid #d1d5db; }
-        #start-camera-btn { background-color: #2563eb; color: white; border: none; padding: 12px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 1rem; width: 100%; margin-bottom: 15px; }
-        #start-camera-btn:hover { background-color: #1d4ed8; }
+
+        :root {
+
+            --primary: #4f46e5;
+
+            --primary-hover: #4338ca;
+
+            --bg-main: #f8fafc;
+
+            --text-dark: #0f172a;
+
+            --text-muted: #64748b;
+
+        }
+
+
+
+        body { 
+
+            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+
+            background-color: var(--bg-main); 
+
+            display: flex; 
+
+            flex-direction: column; 
+
+            align-items: center; 
+
+            justify-content: center; 
+
+            min-height: 100vh; 
+
+            margin: 0; 
+
+            padding: 16px; 
+
+            box-sizing: border-box; 
+
+        }
+
+
+
+        .card { 
+
+            background-color: white; 
+
+            padding: 32px 24px; 
+
+            width: 100%; 
+
+            max-width: 420px; 
+
+            margin: 0 auto;
+
+            text-align: center; 
+
+            border-radius: 24px; 
+
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+
+            border: 1px solid #f1f5f9;
+
+            box-sizing: border-box;
+
+        }
+
+
+
+        h1 { 
+
+            font-size: 1.5rem; 
+
+            font-weight: 800; 
+
+            color: var(--text-dark); 
+
+            margin-top: 0; 
+
+            margin-bottom: 6px; 
+
+            letter-spacing: -0.025em;
+
+        }
+
+
+
+        p.subtitle { 
+
+            font-size: 0.875rem; 
+
+            color: var(--text-muted); 
+
+            margin-bottom: 28px; 
+
+            font-weight: 500;
+
+        }
+
+
+
+        /* Area Scanner Custom Frame */
+
+        #reader-wrapper {
+
+            position: relative;
+
+            width: 100%;
+
+            aspect-ratio: 1/1;
+
+            margin-bottom: 20px;
+
+            border-radius: 16px;
+
+            overflow: hidden;
+
+            background-color: #000;
+
+        }
+
+
+
+        #reader { 
+
+            width: 100% !important; 
+
+            height: 100% !important;
+
+            border: none !important; 
+
+        }
+
+
+
+        #reader img { display: none !important; }
+
+        #reader button { display: none !important; }
+
+
+
+        /* Tombol Utama */
+
+        .btn-primary { 
+
+            background-color: var(--primary); 
+
+            color: white; 
+
+            border: none; 
+
+            padding: 14px 24px; 
+
+            font-weight: 700; 
+
+            border-radius: 14px; 
+
+            cursor: pointer; 
+
+            font-size: 1rem; 
+
+            width: 100%; 
+
+            margin-bottom: 10px; 
+
+            transition: all 0.2s ease;
+
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+
+        }
+
+
+
+        .btn-primary:hover { 
+
+            background-color: var(--primary-hover); 
+
+            transform: translateY(-1px);
+
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.25);
+
+        }
+
+
+
+        .btn-primary:active {
+
+            transform: translateY(1px);
+
+        }
+
+
+
         .hidden { display: none !important; }
-        #loading-msg { color: #2563eb; font-weight: 600; margin: 15px 0; display: none; }
-        #result-box { text-align: left; padding: 15px; border-radius: 12px; border: 1px solid; display: none; margin-top: 15px;}
-        #result-box.success { background-color: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
-        #result-box.already { background-color: #fef2f2; border-color: #fecaca; color: #991b1b; }
-        #result-box.notfound { background-color: #fffbeb; border-color: #fde68a; color: #92400e; }
-        #result-box.error { background-color: #f9fafb; border-color: #d1d5db; color: #1f2937; }
-        #scanned-code { font-family: monospace; font-weight: bold; font-size: 1.1rem; word-break: break-all; }
-        #reset-btn { background-color: white; border: 1px solid #d1d5db; color: #1f2937; padding: 10px 15px; border-radius: 8px; width: 100%; margin-top: 15px; cursor: pointer; font-weight: 600; }
-        #error-log { color: red; font-size: 0.8rem; text-align: left; background: #ffeeee; padding: 10px; border-radius: 5px; margin-top: 10px; display: none; word-break: break-all;}
+
+
+
+        /* Spinner Loading Modern */
+
+        #loading-container {
+
+            display: none;
+
+            padding: 30px 0;
+
+        }
+
+
+
+        .spinner {
+
+            width: 40px;
+
+            height: 40px;
+
+            border: 4px solid #e2e8f0;
+
+            border-top: 4px solid var(--primary);
+
+            border-radius: 50%;
+
+            margin: 0 auto 16px auto;
+
+            animation: spin 0.8s linear infinite;
+
+        }
+
+
+
+        #loading-msg { 
+
+            color: var(--text-dark); 
+
+            font-weight: 600; 
+
+            font-size: 0.95rem;
+
+        }
+
+
+
+        @keyframes spin {
+
+            0% { transform: rotate(0deg); }
+
+            100% { transform: rotate(360deg); }
+
+        }
+
+
+
+        /* Desain Kotak Hasil Scan */
+
+        #result-box { 
+
+            text-align: left; 
+
+            padding: 20px; 
+
+            border-radius: 16px; 
+
+            display: none; 
+
+            margin-top: 10px;
+
+            animation: slideUp 0.3s ease-out;
+
+        }
+
+
+
+        @keyframes slideUp {
+
+            from { transform: translateY(10px); opacity: 0; }
+
+            to { transform: translateY(0); opacity: 1; }
+
+        }
+
+
+
+        #result-box h2 { 
+
+            font-size: 0.85rem; 
+
+            text-transform: uppercase; 
+
+            letter-spacing: 0.05em; 
+
+            margin-top: 0; 
+
+            margin-bottom: 4px;
+
+            color: inherit;
+
+            opacity: 0.8;
+
+        }
+
+
+
+        #scanned-code { 
+
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; 
+
+            font-weight: 700; 
+
+            font-size: 1.15rem; 
+
+            word-break: break-all; 
+
+            margin: 0 0 12px 0;
+
+        }
+
+
+
+        #scan-status { 
+
+            font-size: 0.95rem; 
+
+            line-height: 1.5;
+
+            margin: 0; 
+
+            font-weight: 500;
+
+        }
+
+
+
+        /* Variasi Warna Kartu Status */
+
+        #result-box.success { background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+
+        #result-box.already { background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+
+        #result-box.notfound { background-color: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+
+        #result-box.error { background-color: #f8fafc; border: 1px solid #e2e8f0; color: #334155; }
+
+
+
+        /* Tombol Reset / Scan Lagi */
+
+        #reset-btn { 
+
+            background-color: #f1f5f9; 
+
+            border: none; 
+
+            color: #475569; 
+
+            padding: 12px 20px; 
+
+            border-radius: 12px; 
+
+            width: 100%; 
+
+            margin-top: 20px; 
+
+            cursor: pointer; 
+
+            font-weight: 700; 
+
+            font-size: 0.95rem;
+
+            transition: background 0.2s;
+
+        }
+
+
+
+        #reset-btn:hover { background-color: #e2e8f0; color: #1e293b; }
+
+
+
+        /* Log Error Kamera */
+
+        #error-log { 
+
+            color: #991b1b; 
+
+            font-size: 0.85rem; 
+
+            text-align: left; 
+
+            background: #fef2f2; 
+
+            padding: 14px; 
+
+            border-radius: 12px; 
+
+            margin-top: 10px; 
+
+            display: none; 
+
+            word-break: break-all;
+
+            border: 1px solid #fecaca;
+
+        }
+
     </style>
+
 </head>
+
 <body>
 
-    <div class="container">
-        <h1>Voucher Scanner</h1>
-        <p class="subtitle">Koneksi Terhubung ke Google Sheets</p>
-        
-        <button id="start-camera-btn">Aktifkan Kamera</button>
 
-        <div id="reader" class="hidden"></div>
+
+    <div class="card">
+
+        <h1>Voucher Validator</h1>
+
+        <p class="subtitle">Koneksi Terhubung ke Google Sheets</p>
+
         
+
+        <button id="start-camera-btn" class="btn-primary">Aktifkan Kamera</button>
+
+
+
+        <div id="reader-wrapper" class="hidden">
+
+            <div id="reader"></div>
+
+        </div>
+
+        
+
         <div id="error-log"></div>
 
-        <div id="loading-msg">Memeriksa Database Google Sheets...</div>
+
+
+        <div id="loading-container">
+
+            <div class="spinner"></div>
+
+            <div id="loading-msg">Memeriksa Database Google Sheets...</div>
+
+        </div>
+
+
 
         <div id="result-box">
-            <h2 style="font-size: 1rem; margin-top:0;">Hasil Scan:</h2>
+
+            <h2>Kode Voucher</h2>
+
             <p id="scanned-code"></p>
-            <p id="scan-status" style="font-size: 0.9rem; margin-bottom:0;"></p>
+
+            <p id="scan-status"></p>
+
             <button id="reset-btn">Scan Voucher Lain</button>
+
         </div>
+
     </div>
 
+
+
     <script>
-        // === [WAJIB] GANTI DENGAN URL GOOGLE APPS SCRIPT KAMU ===
+
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyMGceJ9CudYh74Iq8nM5TQwhZlvkU-_Gb0xmH3exayOJu1-6fW4yKaOBckBH4MQb_thQ/exec";
 
-        // Variabel global
+
+
         let html5QrCodeScanner;
+
         const startBtn = document.getElementById('start-camera-btn');
-        const readerDiv = document.getElementById('reader');
+
+        const readerWrapper = document.getElementById('reader-wrapper');
+
         const errorLog = document.getElementById('error-log');
 
-        // Fungsi untuk menyalakan kamera (Dipanggil saat tombol diklik)
-        startBtn.addEventListener('click', () => {
-            // Sembunyikan tombol, tampilkan kotak kamera
-            startBtn.classList.add('hidden');
-            readerDiv.classList.remove('hidden');
-            errorLog.style.display = 'none';
-            errorLog.innerText = '';
+        const loadingContainer = document.getElementById('loading-container');
 
-            // Inisialisasi scanner dengan konfigurasi yang lebih stabil
+
+
+        // Mengaktifkan Kamera
+
+        startBtn.addEventListener('click', () => {
+
+            startBtn.classList.add('hidden');
+
+            readerWrapper.classList.remove('hidden');
+
+            errorLog.style.display = 'none';
+
+
+
             html5QrCodeScanner = new Html5QrcodeScanner("reader", { 
+
                 fps: 10, 
-                qrbox: {width: 250, height: 250},
-                // Mencoba memprioritaskan kamera belakang
+
+                qrbox: { width: 230, height: 230 },
+
                 rememberLastUsedCamera: true,
+
                 supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+
             });
+
             
-            // Jalankan scanner
+
             html5QrCodeScanner.render(onScanSuccess, onScanError);
+
         });
 
-        // Fungsi jika scan QR berhasil
-        function onScanSuccess(decodedText) {
-            // Matikan scanner agar tidak scan berkali-kali
-            html5QrCodeScanner.clear();
-            
-            // Tampilkan loading, sembunyikan kotak kamera
-            document.getElementById('loading-msg').style.display = 'block';
-            readerDiv.classList.add('hidden');
 
-            // Kirim ke Google Sheets
+
+        // Ketika QR code berhasil dibaca kamera
+
+        function onScanSuccess(decodedText) {
+
+            html5QrCodeScanner.clear();
+
+            
+
+            loadingContainer.style.display = 'block';
+
+            readerWrapper.classList.add('hidden');
+
+
+
             fetch(`${WEB_APP_URL}?code=${encodeURIComponent(decodedText)}`)
+
                 .then(response => response.json())
+
                 .then(data => {
-                    document.getElementById('loading-msg').style.display = 'none';
+
+                    loadingContainer.style.display = 'none';
+
                     const resultBox = document.getElementById('result-box');
+
                     const scannedCodeElem = document.getElementById('scanned-code');
+
                     const statusElem = document.getElementById('scan-status');
 
+
+
                     resultBox.style.display = 'block';
+
                     scannedCodeElem.innerText = decodedText;
 
-                    // Atur warna dan pesan berdasarkan respon API
+
+
                     if (data.status === "SUCCESS") {
+
                         resultBox.className = "success";
+
                         statusElem.innerHTML = data.message;
+
                     } else if (data.status === "ALREADY_REDEEMED") {
+
                         resultBox.className = "already";
+
                         statusElem.innerHTML = data.message;
+
                     } else if (data.status === "NOT_FOUND") {
+
                         resultBox.className = "notfound";
+
                         statusElem.innerHTML = data.message;
+
                     } else {
+
                         resultBox.className = "error";
-                        statusElem.innerText = "Terjadi kesalahan respon server.";
+
+                        statusElem.innerText = "Terjadi kesalahan sistem pada respon data.";
+
                     }
+
                 })
+
                 .catch(error => {
-                    document.getElementById('loading-msg').style.display = 'none';
+
+                    loadingContainer.style.display = 'none';
+
                     const resultBox = document.getElementById('result-box');
+
                     resultBox.style.display = 'block';
+
                     resultBox.className = "error";
+
                     document.getElementById('scanned-code').innerText = decodedText;
-                    document.getElementById('scan-status').innerText = "Gagal terhubung ke database. Cek koneksi internet atau URL App Script.";
+
+                    document.getElementById('scan-status').innerText = "Gagal memproses data. Periksa kembali jaringan internet atau status deployment App Script.";
+
                     console.error('Error fetch:', error);
+
                 });
+
         }
 
-        // Fungsi jika library scanner gagal inisialisasi/error kamera
+
+
         function onScanError(errorMessage) {
-            // Jangan tampilkan error di log untuk setiap frame gagal deteksi QR,
-            // tapi tampilkan jika ada error fatal (misal kamera tidak ditemukan)
+
             if(errorMessage.includes("NotFound") || errorMessage.includes("NotAllowed")) {
+
                 errorLog.style.display = 'block';
-                errorLog.innerText = "Error Kamera: " + errorMessage;
-                startBtn.classList.remove('hidden'); // Munculkan tombol start lagi
+
+                errorLog.innerText = "Akses Kamera Gagal: " + errorMessage;
+
+                startBtn.classList.remove('hidden');
+
                 startBtn.innerText = "Coba Aktifkan Kamera Lagi";
-                readerDiv.classList.add('hidden'); // Sembunyikan kotak hitam
+
+                readerWrapper.classList.add('hidden');
+
             }
+
         }
 
-        // Tombol Reset untuk scan ulang
+
+
         document.getElementById('reset-btn').addEventListener('click', () => {
+
             location.reload();
+
         });
+
     </script>
+
 </body>
+
 </html>
