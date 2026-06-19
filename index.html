@@ -8,7 +8,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Voucher Validator Dashboard</title>
+    <title>Redeem System</title>
 
     <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -426,7 +426,7 @@
 
     <div class="card">
 
-        <h1>Voucher Validator</h1>
+        <h1>Redeem System</h1>
 
         <p class="subtitle">Koneksi Terhubung ke Google Sheets</p>
 
@@ -452,7 +452,7 @@
 
             <div class="spinner"></div>
 
-            <div id="loading-msg">Memeriksa Database Google Sheets...</div>
+            <div id="loading-msg">Memeriksa Data...</div>
 
         </div>
 
@@ -600,7 +600,7 @@
 
                     document.getElementById('scanned-code').innerText = decodedText;
 
-                    document.getElementById('scan-status').innerText = "Gagal memproses data. Periksa kembali jaringan internet atau status deployment App Script.";
+                    document.getElementById('scan-status').innerText = "Gagal memproses data. Periksa kembali jaringan internet";
 
                     console.error('Error fetch:', error);
 
