@@ -476,7 +476,7 @@
 
     <script>
 
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyMGceJ9CudYh74Iq8nM5TQwhZlvkU-_Gb0xmH3exayOJu1-6fW4yKaOBckBH4MQb_thQ/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx-_z_EftSd5c-8_UO1aFeEXfsWY745X13793I27OX5Dv2HrIvQ1fIJK08_QUwn_MZZ/exec";
 
 
 
@@ -561,25 +561,18 @@
 
 
                     if (data.status === "SUCCESS") {
-
                         resultBox.className = "success";
-
                         statusElem.innerHTML = data.message;
-
                     } else if (data.status === "ALREADY_REDEEMED") {
-
                         resultBox.className = "already";
-
                         statusElem.innerHTML = data.message;
-
+                    } else if (data.status === "EXPIRED") { // <--- TAMBAHKAN BLOK INI
+                        resultBox.className = "already";    // Kita pakai warna merah kartunya 'already' biar kontras peringatan
+                        statusElem.innerHTML = data.message;
                     } else if (data.status === "NOT_FOUND") {
-
                         resultBox.className = "notfound";
-
                         statusElem.innerHTML = data.message;
-
                     } else {
-
                         resultBox.className = "error";
 
                         statusElem.innerText = "Terjadi kesalahan sistem pada respon data.";
